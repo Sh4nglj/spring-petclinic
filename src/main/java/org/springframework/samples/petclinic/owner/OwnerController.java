@@ -94,15 +94,22 @@ class OwnerController {
 
 	@GetMapping("/owners")
 	public String processFindForm(@RequestParam(defaultValue = "1") int page, Owner owner, BindingResult result,
-			Model model) {
+			@RequestParam(required = false) String vaccinationStatus, Model model) {
 		// allow parameterless GET request for /owners to return all records
 		String lastName = owner.getLastName();
 		if (lastName == null) {
 			lastName = ""; // empty string signifies broadest possible search
 		}
 
-		// find owners by last name
-		Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, lastName);
+		// find owners by last name and vaccination status
+		Page<Owner> ownersResults;
+		if (vaccinationStatus != null && !vaccinationStatus.isEmpty()) {
+			ownersResults = findPaginatedForOwnersLastNameAndVaccinationStatus(page, lastName, vaccinationStatus);
+		}
+		else {
+			ownersResults = findPaginatedForOwnersLastName(page, lastName);
+		}
+
 		if (ownersResults.isEmpty()) {
 			// no owners found
 			result.rejectValue("lastName", "notFound", "not found");
@@ -116,6 +123,7 @@ class OwnerController {
 		}
 
 		// multiple owners found
+		model.addAttribute("vaccinationStatus", vaccinationStatus);
 		return addPaginationModel(page, model, ownersResults);
 	}
 
@@ -132,6 +140,13 @@ class OwnerController {
 		int pageSize = 5;
 		Pageable pageable = PageRequest.of(page - 1, pageSize);
 		return owners.findByLastNameStartingWith(lastname, pageable);
+	}
+
+	private Page<Owner> findPaginatedForOwnersLastNameAndVaccinationStatus(int page, String lastname,
+			String vaccinationStatus) {
+		int pageSize = 5;
+		Pageable pageable = PageRequest.of(page - 1, pageSize);
+		return owners.findByLastNameStartingWithAndPetVaccinationStatus(lastname, vaccinationStatus, pageable);
 	}
 
 	@GetMapping("/owners/{ownerId}/edit")

@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.Objects;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
@@ -81,6 +82,23 @@ public class Pet extends NamedEntity {
 
 	public void addVisit(Visit visit) {
 		getVisits().add(visit);
+	}
+
+	/**
+	 * Return the Visit with the given id, or null if none found for this Pet.
+	 * @param id to test
+	 * @return the Visit with the given id, or null if no such Visit exists for this Pet
+	 */
+	public @Nullable Visit getVisit(Integer id) {
+		for (Visit visit : getVisits()) {
+			if (!visit.isNew()) {
+				Integer compId = visit.getId();
+				if (Objects.equals(compId, id)) {
+					return visit;
+				}
+			}
+		}
+		return null;
 	}
 
 }

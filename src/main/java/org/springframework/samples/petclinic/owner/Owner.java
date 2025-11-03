@@ -174,4 +174,49 @@ public class Owner extends Person {
 		pet.addVisit(visit);
 	}
 
+	/**
+	 * Updates the given {@link Visit} for the {@link Pet} with the given identifier.
+	 * @param petId the identifier of the {@link Pet}, must not be {@literal null}.
+	 * @param visitId the identifier of the {@link Visit}, must not be {@literal null}.
+	 * @param visit the updated visit, must not be {@literal null}.
+	 */
+	public void updateVisit(Integer petId, Integer visitId, Visit visit) {
+
+		Assert.notNull(petId, "Pet identifier must not be null!");
+		Assert.notNull(visitId, "Visit identifier must not be null!");
+		Assert.notNull(visit, "Visit must not be null!");
+
+		Pet pet = getPet(petId);
+		Assert.notNull(pet, "Invalid Pet identifier!");
+
+		Visit existingVisit = pet.getVisit(visitId);
+		Assert.notNull(existingVisit, "Invalid Visit identifier!");
+
+		// 更新访问记录的属性
+		existingVisit.setDate(visit.getDate());
+		existingVisit.setDescription(visit.getDescription());
+		existingVisit.setVaccinationStatus(visit.getVaccinationStatus());
+		existingVisit.setVaccinationDate(visit.getVaccinationDate());
+	}
+
+	/**
+	 * Removes the {@link Visit} with the given identifier from the {@link Pet} with the
+	 * given identifier.
+	 * @param petId the identifier of the {@link Pet}, must not be {@literal null}.
+	 * @param visitId the identifier of the {@link Visit}, must not be {@literal null}.
+	 */
+	public void removeVisit(Integer petId, Integer visitId) {
+
+		Assert.notNull(petId, "Pet identifier must not be null!");
+		Assert.notNull(visitId, "Visit identifier must not be null!");
+
+		Pet pet = getPet(petId);
+		Assert.notNull(pet, "Invalid Pet identifier!");
+
+		Visit visit = pet.getVisit(visitId);
+		if (visit != null) {
+			pet.getVisits().remove(visit);
+		}
+	}
+
 }

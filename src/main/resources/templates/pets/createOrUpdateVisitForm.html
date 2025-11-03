@@ -31,6 +31,19 @@
     <div class="form-group has-feedback">
       <input th:replace="~{fragments/inputField :: input ('Date', 'date', 'date')}" />
       <input th:replace="~{fragments/inputField :: input ('Description', 'description', 'text')}" />
+      
+      <label class="col-sm-2 control-label" th:text="'Vaccination Status'">Vaccination Status</label>
+      <div class="col-sm-10">
+        <select th:field="*{vaccinationStatus}" class="form-control">
+          <option value="">-- Select --</option>
+          <option th:each="status : ${T(org.springframework.samples.petclinic.owner.Visit$VaccinationStatus).values()}"
+                  th:value="${status}"
+                  th:text="${status.displayName}"></option>
+        </select>
+        <span th:if="${#fields.hasErrors('vaccinationStatus')}" th:errors="*{vaccinationStatus}" class="help-block"></span>
+      </div>
+      
+      <input th:replace="~{fragments/inputField :: input ('Vaccination Date', 'vaccinationDate', 'date')}" />
     </div>
 
     <div class="form-group">

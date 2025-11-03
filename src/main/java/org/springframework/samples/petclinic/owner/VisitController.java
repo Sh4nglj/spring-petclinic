@@ -95,9 +95,86 @@ class VisitController {
 			return "pets/createOrUpdateVisitForm";
 		}
 
+		// Validate vaccination date is not before pet's birth date
+		Pet pet = owner.getPet(petId);
+		if (pet != null && visit.getVaccinationDate() != null && pet.getBirthDate() != null) {
+			if (visit.getVaccinationDate().isBefore(pet.getBirthDate())) {
+				result.rejectValue("vaccinationDate", "error.vaccinationDate.beforeBirthDate",
+						"Vaccination date cannot be before pet's birth date");
+				return "pets/createOrUpdateVisitForm";
+			}
+		}
+
 		owner.addVisit(petId, visit);
 		this.owners.save(owner);
 		redirectAttributes.addFlashAttribute("message", "Your visit has been booked");
+		return "redirect:/owners/{ownerId}";
+	}
+
+	// 编辑疫苗接种记录的GET方法
+	@GetMapping("/owners/{ownerId}/pets/{petId}/visits/{visitId}/edit")
+	public String initEditVisitForm(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId,
+			@PathVariable("visitId") int visitId, Map<String, Object> model) {
+		Optional<Owner> optionalOwner = owners.findById(ownerId);
+		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
+				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
+
+		Pet pet = owner.getPet(petId);
+		if (pet == null) {
+			throw new IllegalArgumentException(
+					"Pet with id " + petId + " not found for owner with id " + ownerId + ".");
+		}
+
+		Visit visit = pet.getVisit(visitId);
+		if (visit == null) {
+			throw new IllegalArgumentException(
+					"Visit with id " + visitId + " not found for pet with id " + petId + ".");
+		}
+
+		model.put("pet", pet);
+		model.put("owner", owner);
+		model.put("visit", visit);
+
+		return "pets/createOrUpdateVisitForm";
+	}
+
+	// 编辑疫苗接种记录的POST方法
+	@PostMapping("/owners/{ownerId}/pets/{petId}/visits/{visitId}/edit")
+	public String processEditVisitForm(@ModelAttribute Owner owner, @PathVariable int petId, @PathVariable int visitId,
+			@Valid Visit visit, BindingResult result, RedirectAttributes redirectAttributes) {
+		if (result.hasErrors()) {
+			return "pets/createOrUpdateVisitForm";
+		}
+
+		// Validate vaccination date is not before pet's birth date
+		Pet pet = owner.getPet(petId);
+		if (pet != null && visit.getVaccinationDate() != null && pet.getBirthDate() != null) {
+			if (visit.getVaccinationDate().isBefore(pet.getBirthDate())) {
+				result.rejectValue("vaccinationDate", "error.vaccinationDate.beforeBirthDate",
+						"Vaccination date cannot be before pet's birth date");
+				return "pets/createOrUpdateVisitForm";
+			}
+		}
+
+		// 更新访问记录
+		owner.updateVisit(petId, visitId, visit);
+		this.owners.save(owner);
+		redirectAttributes.addFlashAttribute("message", "Your visit has been updated");
+		return "redirect:/owners/{ownerId}";
+	}
+
+	// 删除疫苗接种记录的POST方法
+	@PostMapping("/owners/{ownerId}/pets/{petId}/visits/{visitId}/delete")
+	public String deleteVisit(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId,
+			@PathVariable("visitId") int visitId, RedirectAttributes redirectAttributes) {
+		Optional<Owner> optionalOwner = owners.findById(ownerId);
+		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
+				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
+
+		// 删除访问记录
+		owner.removeVisit(petId, visitId);
+		this.owners.save(owner);
+		redirectAttributes.addFlashAttribute("message", "Your visit has been deleted");
 		return "redirect:/owners/{ownerId}";
 	}
 
