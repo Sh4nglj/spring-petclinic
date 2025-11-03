@@ -22,8 +22,11 @@ import org.springframework.samples.petclinic.model.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -42,6 +45,14 @@ public class Visit extends BaseEntity {
 
 	@NotBlank
 	private @Nullable String description;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "vaccination_status")
+	private @Nullable VaccinationStatus vaccinationStatus;
+
+	@Column(name = "vaccination_date")
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
+	private @Nullable LocalDate vaccinationDate;
 
 	/**
 	 * Creates a new instance of Visit for the current date
@@ -64,6 +75,41 @@ public class Visit extends BaseEntity {
 
 	public void setDescription(@Nullable String description) {
 		this.description = description;
+	}
+
+	public @Nullable VaccinationStatus getVaccinationStatus() {
+		return vaccinationStatus;
+	}
+
+	public void setVaccinationStatus(@Nullable VaccinationStatus vaccinationStatus) {
+		this.vaccinationStatus = vaccinationStatus;
+	}
+
+	public @Nullable LocalDate getVaccinationDate() {
+		return vaccinationDate;
+	}
+
+	public void setVaccinationDate(@Nullable LocalDate vaccinationDate) {
+		this.vaccinationDate = vaccinationDate;
+	}
+
+	/**
+	 * Enum representing the vaccination status of a pet.
+	 */
+	enum VaccinationStatus {
+
+		FULLY_VACCINATED("已接种"), NOT_VACCINATED("未接种"), PARTIALLY_VACCINATED("部分接种"), VACCINATION_EXPIRED("免疫期已过");
+
+		private final String displayName;
+
+		VaccinationStatus(String displayName) {
+			this.displayName = displayName;
+		}
+
+		public String getDisplayName() {
+			return displayName;
+		}
+
 	}
 
 }

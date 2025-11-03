@@ -21,6 +21,7 @@ import jakarta.annotation.Nonnull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  * Repository class for <code>Owner</code> domain objects. All method names are compliant
@@ -59,5 +60,18 @@ public interface OwnerRepository extends JpaRepository<Owner, Integer> {
 	 * input for id)
 	 */
 	Optional<Owner> findById(Integer id);
+
+	/**
+	 * Retrieve {@link Owner}s from the data store by last name and pet vaccination
+	 * status, returning all owners whose last name <i>starts</i> with the given name and
+	 * have pets with the specified vaccination status.
+	 * @param lastName Value to search for in owner last names
+	 * @param vaccinationStatus Value to search for in pet vaccination status
+	 * @param pageable Pagination information
+	 * @return a Page of matching {@link Owner}s (or an empty Page if none found)
+	 */
+	@Query("SELECT DISTINCT o FROM Owner o JOIN o.pets p JOIN p.visits v WHERE o.lastName LIKE ?1% AND v.vaccinationStatus = ?2")
+	Page<Owner> findByLastNameStartingWithAndPetVaccinationStatus(String lastName, String vaccinationStatus,
+			Pageable pageable);
 
 }
