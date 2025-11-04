@@ -32,6 +32,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import org.springframework.samples.petclinic.vet.Appointment;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -58,6 +59,9 @@ public class Pet extends NamedEntity {
 	@JoinColumn(name = "pet_id")
 	@OrderBy("date ASC")
 	private final Set<Visit> visits = new LinkedHashSet<>();
+	
+	@OneToMany(mappedBy = "pet", fetch = FetchType.LAZY)
+	private final Set<Appointment> appointments = new LinkedHashSet<>();
 
 	public void setBirthDate(@Nullable LocalDate birthDate) {
 		this.birthDate = birthDate;
@@ -81,6 +85,14 @@ public class Pet extends NamedEntity {
 
 	public void addVisit(Visit visit) {
 		getVisits().add(visit);
+	}
+	
+	public Collection<Appointment> getAppointments() {
+		return this.appointments;
+	}
+	
+	public void addAppointment(Appointment appointment) {
+		getAppointments().add(appointment);
 	}
 
 }

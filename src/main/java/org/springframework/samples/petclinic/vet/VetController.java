@@ -36,10 +36,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 class VetController {
 
 	private final VetRepository vetRepository;
+private final AppointmentService appointmentService;
 
-	public VetController(VetRepository vetRepository) {
-		this.vetRepository = vetRepository;
-	}
+public VetController(VetRepository vetRepository, AppointmentService appointmentService) {
+	this.vetRepository = vetRepository;
+	this.appointmentService = appointmentService;
+}
 
 	@GetMapping("/vets.html")
 	public String showVetList(@RequestParam(defaultValue = "1") int page, Model model) {
@@ -67,12 +69,60 @@ class VetController {
 	}
 
 	@GetMapping({ "/vets" })
-	public @ResponseBody Vets showResourcesVetList() {
-		// Here we are returning an object of type 'Vets' rather than a collection of Vet
-		// objects so it is simpler for JSon/Object mapping
-		Vets vets = new Vets();
-		vets.getVetList().addAll(this.vetRepository.findAll());
-		return vets;
+public @ResponseBody Vets showResourcesVetList() {
+	// Here we are returning an object of type 'Vets' rather than a collection of Vet
+	// objects so it is simpler for JSon/Object mapping
+	Vets vets = new Vets();
+	vets.getVetList().addAll(this.vetRepository.findAll());
+	return vets;
+}
+
+@GetMapping("/vets/{vetId}/schedule")
+public String showVetSchedule(@PathVariable("vetId") Integer vetId,
+		@RequestParam(value = "date", required = false) LocalDate date,
+		Model model) {
+	// Get vet information
+	Vet vet = vetRepository.findById(vetId)
+			.orElseThrow(() -> new IllegalArgumentException("Vet not found with id: " + vetId));
+	model.addAttribute("vet", vet);
+	
+	// Set current date if not provided
+	if (date == null) {
+		date = LocalDate.now();
 	}
+	
+	// Get week start and end dates
+	LocalDate[] weekDates = appointmentService.getWeekDates(date);
+	LocalDate weekStart = weekDates[0];
+	LocalDate weekEnd = weekDates[1];
+	
+	// Get all appointments for this vet in the current week
+	List<Appointment> appointments = appointmentService.getAppointmentsByVetAndWeek(vetId, weekStart, weekEnd);
+	model.addAttribute("appointments", appointments);
+	
+	// Calculate statistics
+	long totalAppointments = appointments.size();
+	long completedAppointments = appointments.stream()
+			.filter(a -> a.getStatus() == Appointment.Status.COMPLETED)
+			.count();
+	long canceledAppointments = appointments.stream()
+			.filter(a -> a.getStatus() == Appointment.Status.CANCELED)
+			.count();
+	
+	model.addAttribute("totalAppointments", totalAppointments);
+	model.addAttribute("completedAppointments", completedAppointments);
+	model.addAttribute("canceledAppointments", canceledAppointments);
+	model.addAttribute("currentDate", date);
+	model.addAttribute("weekStart", weekStart);
+	model.addAttribute("weekEnd", weekEnd);
+	
+	// Add previous and next week dates for navigation
+	model.addAttribute("previousWeekDate", weekStart.minusDays(1));
+	model.addAttribute("nextWeekDate", weekEnd.plusDays(1));
+	
+	// Add all time slots for the calendar view
+	model.addAttribute("timeSlots", Appointment.TimeSlot.values());
+	
+	return "vets/vetSchedule";
 
 }

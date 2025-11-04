@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'vets')}">
+
+<body>
+
+  <h2 th:text="#{vet.schedule} + ': ' + ${vet.firstName} + ' ' + ${vet.lastName}">Vet Schedule</h2>
+  
+  <!-- Statistics section -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h5 class="card-title" th:text="#{total.appointments}">Total Appointments</h5>
+          <p class="card-text display-4" th:text="${totalAppointments}">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title" th:text="#{completed.appointments}">Completed Appointments</h5>
+          <p class="card-text display-4" th:text="${completedAppointments}">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-danger text-white">
+        <div class="card-body">
+          <h5 class="card-title" th:text="#{canceled.appointments}">Canceled Appointments</h5>
+          <p class="card-text display-4" th:text="${canceledAppointments}">0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Week navigation -->
+  <div class="mb-4">
+    <div class="btn-group" role="group">
+      <a th:href="@{/vets/{vetId}/schedule(vetId=${vet.id}, date=${previousWeekDate})}" class="btn btn-secondary">
+        <i class="fa fa-chevron-left"></i> [[#{previous.week}]]
+      </a>
+      <span class="btn btn-outline-primary" th:text="${#temporals.format(weekStart, 'yyyy-MM-dd')} + ' - ' + ${#temporals.format(weekEnd, 'yyyy-MM-dd')}"></span>
+      <a th:href="@{/vets/{vetId}/schedule(vetId=${vet.id}, date=${nextWeekDate})}" class="btn btn-secondary">
+        [[#{next.week}]] <i class="fa fa-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+  
+  <!-- Calendar view -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th></th>
+          <!-- Generate column headers for each day of the week -->
+          <th th:each="day : ${#numbers.sequence(0, 6)}">
+            <div th:text="${#temporals.dayOfWeekName(weekStart.plusDays(day))}"></div>
+            <div th:text="${#temporals.format(weekStart.plusDays(day), 'MM-dd')}" class="small text-muted"></div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Generate rows for each time slot -->
+        <tr th:each="timeSlot : ${timeSlots}">
+          <td th:text="${timeSlot.displayName}" class="align-top"></td>
+          <!-- Generate cells for each day of the week -->
+          <td th:each="day : ${#numbers.sequence(0, 6)}" th:with="currentDate = ${weekStart.plusDays(day)}">
+            <!-- Find appointments for this time slot and day -->
+            <div th:each="appointment : ${appointments}" 
+                 th:if="${appointment.appointmentDate.isEqual(currentDate)} and ${appointment.timeSlot == timeSlot}"
+                 class="mb-2 p-2 rounded"
+                 th:classappend="${appointment.status == T(org.springframework.samples.petclinic.vet.Appointment.Status).PENDING_CONFIRMATION} ? 'bg-warning text-dark' : ''"
+                 th:classappend="${appointment.status == T(org.springframework.samples.petclinic.vet.Appointment.Status).CONFIRMED} ? 'bg-info text-white' : ''"
+                 th:classappend="${appointment.status == T(org.springframework.samples.petclinic.vet.Appointment.Status).COMPLETED} ? 'bg-success text-white' : ''"
+                 th:classappend="${appointment.status == T(org.springframework.samples.petclinic.vet.Appointment.Status).CANCELED} ? 'bg-danger text-white' : ''">
+              <div th:text="${appointment.pet.name}" class="font-weight-bold"></div>
+              <div th:text="${appointment.pet.type.name}" class="small"></div>
+              <div th:text="${appointment.status.displayName}" class="small"></div>
+              <div class="btn-group btn-group-sm mt-1">
+                <a th:href="@{/appointments/{id}/edit(id=${appointment.id})}" class="btn btn-primary btn-sm" th:text="#{edit}"></a>
+                <a th:href="@{/appointments/{id}/delete(id=${appointment.id})}" class="btn btn-danger btn-sm" th:text="#{delete}" 
+                   onclick="return confirm('[[#{confirm.delete.appointment}]]');"></a>
+              </div>
+            </div>
+            <!-- Add new appointment button -->
+            <a th:href="@{/appointments/new(vetId=${vet.id}, date=${currentDate}, timeSlot=${timeSlot})}" 
+               class="btn btn-light btn-sm btn-block" th:text="#{add.appointment}"></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+
+</html>

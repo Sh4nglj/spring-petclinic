@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'vets')}">
+
+<body>
+
+  <h2>
+    <th:block th:if="${appointment['new']}" th:text="#{new}">New </th:block>
+    Appointment
+  </h2>
+
+  <!-- 显示宠物信息（如果从宠物页面进入） -->
+  <th:block th:if="${pet}">
+    <b th:text="#{pet}">Pet</b>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th th:text="#{name}">Name</th>
+          <th th:text="#{birthDate}">Birth Date</th>
+          <th th:text="#{type}">Type</th>
+          <th th:text="#{owner}">Owner</th>
+        </tr>
+      </thead>
+      <tr>
+        <td th:text="${pet.name}"></td>
+        <td th:text="${#temporals.format(pet.birthDate, 'yyyy-MM-dd')}"></td>
+        <td th:text="${pet.type}"></td>
+        <td th:text="${owner?.firstName + ' ' + owner?.lastName}"></td>
+      </tr>
+    </table>
+  </th:block>
+
+  <!-- 显示兽医信息（如果从兽医页面进入） -->
+  <th:block th:if="${vet}">
+    <b th:text="#{vet}">Vet</b>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th th:text="#{name}">Name</th>
+          <th th:text="#{specialties}">Specialties</th>
+        </tr>
+      </thead>
+      <tr>
+        <td th:text="${vet.getFullName()}"></td>
+        <td th:text="${vet.getSpecialties().isEmpty() ? 'None' : vet.getSpecialties().stream().map(s -> s.getName()).collect(java.util.stream.Collectors.joining(', '))}"></td>
+      </tr>
+    </table>
+  </th:block>
+
+  <form th:object="${appointment}" class="form-horizontal" method="post">
+    <div class="form-group has-feedback">
+      <!-- 预约日期 -->
+      <input th:replace="~{fragments/inputField :: input ('Appointment Date', 'appointmentDate', 'date')}" />
+      
+      <!-- 预约时间段 -->
+      <label class="col-sm-2 control-label" for="timeSlot" th:text="#{timeSlot}">Time Slot</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="timeSlot" th:field="*{timeSlot}" required>
+          <option value="" th:text="#{selectTimeSlot}">Select Time Slot</option>
+          <option th:each="timeSlot : ${timeSlots}" th:value="${timeSlot}" th:text="${timeSlot.getDisplayName()}"></option>
+        </select>
+      </div>
+      
+      <!-- 宠物选择（如果不是从宠物页面进入） -->
+      <th:block th:unless="${pet}">
+        <label class="col-sm-2 control-label" for="pet" th:text="#{pet}">Pet</label>
+        <div class="col-sm-10">
+          <select class="form-control" id="pet" th:field="*{pet.id}" required>
+            <option value="" th:text="#{selectPet}">Select Pet</option>
+            <option th:each="owner : ${owners}" th:value="${owner.getId() * 1000 + pet.getId()}" th:text="${owner.getLastName() + ', ' + owner.getFirstName() + ' - ' + pet.getName()}" th:each="pet : ${owner.getPets()}"></option>
+          </select>
+        </div>
+      </th:block>
+      
+      <!-- 兽医选择（如果不是从兽医页面进入） -->
+      <th:block th:unless="${vet}">
+        <label class="col-sm-2 control-label" for="vet" th:text="#{vet}">Vet</label>
+        <div class="col-sm-10">
+          <select class="form-control" id="vet" th:field="*{vet.id}" required>
+            <option value="" th:text="#{selectVet}">Select Vet</option>
+            <option th:each="vet : ${vets}" th:value="${vet.getId()}" th:text="${vet.getFullName()}"></option>
+          </select>
+        </div>
+      </th:block>
+      
+      <!-- 预约状态 -->
+      <label class="col-sm-2 control-label" for="status" th:text="#{status}">Status</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="status" th:field="*{status}" required>
+          <option value="" th:text="#{selectStatus}">Select Status</option>
+          <option th:each="status : ${statuses}" th:value="${status}" th:text="${status.getDisplayName()}"></option>
+        </select>
+      </div>
+      
+      <!-- 预约备注 -->
+      <label class="col-sm-2 control-label" for="notes" th:text="#{notes}">Notes</label>
+      <div class="col-sm-10">
+        <textarea class="form-control" id="notes" th:field="*{notes}" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <input type="hidden" name="appointmentId" th:value="${appointment.id}" />
+        <button class="btn btn-primary" type="submit" th:text="${appointment['new'] ? '#{addAppointment}' : '#{updateAppointment}'}">Add Appointment</button>
+        <a th:href="${vet ? '/vets/' + vet.id + '/schedule' : '/owners/' + owner.id}" class="btn btn-default" th:text="#{cancel}">Cancel</a>
+      </div>
+    </div>
+  </form>
+
+</body>
+
+</html>
