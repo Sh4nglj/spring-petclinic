@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'system')}">
+
+<body>
+
+  <h2>System Statistics</h2>
+
+  <h3>Owners by City</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>City</th>
+        <th>Number of Owners</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="entry : ${ownersByCity}">
+        <td th:text="${entry.key}"></td>
+        <td th:text="${entry.value}"></td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+
+</html>
