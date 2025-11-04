@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.springframework.core.style.ToStringCreator;
+import org.springframework.samples.petclinic.model.City;
 import org.springframework.samples.petclinic.model.Person;
 import org.springframework.util.Assert;
 
@@ -53,9 +54,9 @@ public class Owner extends Person {
 	@NotBlank
 	private @Nullable String address;
 
-	@Column(name = "city")
-	@NotBlank
-	private @Nullable String city;
+	@ManyToOne
+	@JoinColumn(name = "city_id")
+	private @Nullable City city;
 
 	@Column(name = "telephone")
 	@NotBlank
@@ -75,11 +76,11 @@ public class Owner extends Person {
 		this.address = address;
 	}
 
-	public @Nullable String getCity() {
+	public @Nullable City getCity() {
 		return this.city;
 	}
 
-	public void setCity(@Nullable String city) {
+	public void setCity(@Nullable City city) {
 		this.city = city;
 	}
 

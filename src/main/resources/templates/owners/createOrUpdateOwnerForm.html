@@ -10,7 +10,31 @@
       <input th:replace="~{fragments/inputField :: input (#{firstName}, 'firstName', 'text')}" />
       <input th:replace="~{fragments/inputField :: input (#{lastName}, 'lastName', 'text')}" />
       <input th:replace="~{fragments/inputField :: input (#{address}, 'address', 'text')}" />
-      <input th:replace="~{fragments/inputField :: input (#{city}, 'city', 'text')}" />
+      <div class="form-group">
+        <label class="col-sm-2 control-label" th:text="#{province}">Province</label>
+        <div class="col-sm-10">
+          <select id="province" name="province" class="form-control" required>
+            <option value="">-- Select Province --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-2 control-label" th:text="#{city}">City</label>
+        <div class="col-sm-10">
+          <select id="city" name="city" class="form-control" required disabled>
+            <option value="">-- Select City --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-2 control-label" th:text="#{district}">District</label>
+        <div class="col-sm-10">
+          <select id="district" name="district" class="form-control" required disabled>
+            <option value="">-- Select District --</option>
+          </select>
+        </div>
+      </div>
+      <input type="hidden" id="cityId" name="city.id" />
       <input th:replace="~{fragments/inputField :: input (#{telephone}, 'telephone', 'text')}" />
     </div>
     <div class="form-group">
@@ -20,6 +44,106 @@
       </div>
     </div>
   </form>
+
+  <script th:inline="javascript">
+    // Initialize province dropdown
+    fetch('/api/provinces')
+      .then(response => response.json())
+      .then(provinces => {
+        const provinceSelect = document.getElementById('province');
+        provinces.forEach(province => {
+          const option = document.createElement('option');
+          option.value = province.code;
+          option.textContent = province.name;
+          provinceSelect.appendChild(option);
+        });
+      });
+
+    // Province change event
+    document.getElementById('province').addEventListener('change', function() {
+      const provinceCode = this.value;
+      const citySelect = document.getElementById('city');
+      const districtSelect = document.getElementById('district');
+      const cityIdInput = document.getElementById('cityId');
+
+      // Reset city and district selects
+      citySelect.innerHTML = '<option value="">-- Select City --</option>';
+      districtSelect.innerHTML = '<option value="">-- Select District --</option>';
+      citySelect.disabled = true;
+      districtSelect.disabled = true;
+      cityIdInput.value = '';
+
+      if (provinceCode) {
+        // Load cities
+        fetch(`/api/cities?parentCode=${provinceCode}`)
+          .then(response => response.json())
+          .then(cities => {
+            cities.forEach(city => {
+              const option = document.createElement('option');
+              option.value = city.code;
+              option.textContent = city.name;
+              citySelect.appendChild(option);
+            });
+            citySelect.disabled = false;
+          });
+      }
+    });
+
+    // City change event
+    document.getElementById('city').addEventListener('change', function() {
+      const cityCode = this.value;
+      const districtSelect = document.getElementById('district');
+      const cityIdInput = document.getElementById('cityId');
+
+      // Reset district select
+      districtSelect.innerHTML = '<option value="">-- Select District --</option>';
+      districtSelect.disabled = true;
+      cityIdInput.value = '';
+
+      if (cityCode) {
+        // Load districts
+        fetch(`/api/districts?parentCode=${cityCode}`)
+          .then(response => response.json())
+          .then(districts => {
+            districts.forEach(district => {
+              const option = document.createElement('option');
+              option.value = district.code;
+              option.textContent = district.name;
+              districtSelect.appendChild(option);
+            });
+            districtSelect.disabled = false;
+          });
+      }
+    });
+
+    // District change event
+    document.getElementById('district').addEventListener('change', function() {
+      const districtCode = this.value;
+      const cityIdInput = document.getElementById('cityId');
+
+      if (districtCode) {
+        // Load district information to get city ID
+        fetch(`/api/city/${districtCode}`)
+          .then(response => response.json())
+          .then(district => {
+            if (district) {
+              cityIdInput.value = district.id;
+            }
+          });
+      }
+    });
+
+    // Form submission validation
+    document.getElementById('add-owner-form').addEventListener('submit', function(event) {
+      const districtSelect = document.getElementById('district');
+      const cityIdInput = document.getElementById('cityId');
+
+      if (!districtSelect.value || !cityIdInput.value) {
+        event.preventDefault();
+        alert('Please select a complete address (province, city, district).');
+      }
+    });
+  </script>
 </body>
 
 </html>

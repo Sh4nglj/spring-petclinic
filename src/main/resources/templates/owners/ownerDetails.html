@@ -25,7 +25,10 @@
     </tr>
     <tr>
       <th th:text="#{city}">City</th>
-      <td th:text="*{city}"></td>
+      <td>
+        <span th:text="*{city.name}"></span>
+        <div id="map-container" style="width: 100%; height: 300px; margin-top: 10px;"></div>
+      </td>
     </tr>
     <tr>
       <th th:text="#{telephone}">Telephone</th>
@@ -88,6 +91,43 @@
 
     // Call the function to hide messages
     hideMessages();
+  </script>
+
+  <!-- 高德地图API -->
+  <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=YOUR_AMAP_KEY"></script>
+  <script th:inline="javascript">
+    // 初始化地图
+    var map = new AMap.Map('map-container', {
+      zoom: 10
+    });
+
+    // 获取城市名称
+    var cityName = [[${owner.city.name}]];
+    if ([[${owner.city.parent}]]) {
+      cityName = [[${owner.city.parent.name}]] + cityName;
+      if ([[${owner.city.parent.parent}]]) {
+        cityName = [[${owner.city.parent.parent.name}]] + cityName;
+      }
+    }
+
+    // 根据城市名称定位地图
+    AMap.plugin('AMap.Geocoder', function() {
+      var geocoder = new AMap.Geocoder({
+        city: cityName
+      });
+
+      geocoder.getLocation(cityName, function(status, result) {
+        if (status === 'complete' && result.geocodes.length) {
+          var center = result.geocodes[0].location;
+          map.setCenter(center);
+          // 添加标记
+          var marker = new AMap.Marker({
+            position: center,
+            map: map
+          });
+        }
+      });
+    });
   </script>
 
 </body>

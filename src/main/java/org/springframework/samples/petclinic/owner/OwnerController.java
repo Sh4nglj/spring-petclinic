@@ -21,7 +21,9 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.samples.petclinic.model.City;
+import org.springframework.samples.petclinic.owner.CityRepository;
+import org.springframework.samples.petclinic.owner.OwnerRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -37,6 +39,7 @@ import org.springframework.web.servlet.ModelAndView;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -53,8 +56,11 @@ class OwnerController {
 
 	private final OwnerRepository owners;
 
-	public OwnerController(OwnerRepository owners) {
+	private final CityRepository cityRepository;
+
+	public OwnerController(OwnerRepository owners, CityRepository cityRepository) {
 		this.owners = owners;
+		this.cityRepository = cityRepository;
 	}
 
 	@InitBinder
@@ -85,6 +91,31 @@ class OwnerController {
 		this.owners.save(owner);
 		redirectAttributes.addFlashAttribute("message", "New Owner Created");
 		return "redirect:/owners/" + owner.getId();
+	}
+
+	// City related APIs for cascading dropdown
+	@GetMapping("/api/provinces")
+	@ResponseBody
+	public List<City> getProvinces() {
+		return cityRepository.findByLevel(1);
+	}
+
+	@GetMapping("/api/cities")
+	@ResponseBody
+	public List<City> getCities(@RequestParam String parentCode) {
+		return cityRepository.findByParentCode(parentCode);
+	}
+
+	@GetMapping("/api/districts")
+	@ResponseBody
+	public List<City> getDistricts(@RequestParam String parentCode) {
+		return cityRepository.findByParentCode(parentCode);
+	}
+
+	@GetMapping("/api/city/{code}")
+	@ResponseBody
+	public City getCityByCode(@PathVariable String code) {
+		return cityRepository.findByCode(code).orElse(null);
 	}
 
 	@GetMapping("/owners/find")
