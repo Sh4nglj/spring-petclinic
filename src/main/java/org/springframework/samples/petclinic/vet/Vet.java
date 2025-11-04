@@ -24,11 +24,13 @@ import java.util.stream.Collectors;
 import org.springframework.samples.petclinic.model.NamedEntity;
 import org.springframework.samples.petclinic.model.Person;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.xml.bind.annotation.XmlElement;
 import org.jspecify.annotations.Nullable;
@@ -70,6 +72,28 @@ public class Vet extends Person {
 
 	public void addSpecialty(Specialty specialty) {
 		getSpecialtiesInternal().add(specialty);
+	}
+	
+	@OneToMany(mappedBy = "vet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private @Nullable Set<Appointment> appointments;
+	
+	protected Set<Appointment> getAppointmentsInternal() {
+		if (this.appointments == null) {
+			this.appointments = new HashSet<>();
+		}
+		return this.appointments;
+	}
+	
+	public List<Appointment> getAppointments() {
+		return getAppointmentsInternal().stream()
+			.sorted(Comparator.comparing(Appointment::getAppointmentDate)
+				.thenComparing(Appointment::getTimeSlot))
+			.collect(Collectors.toList());
+	}
+	
+	public void addAppointment(Appointment appointment) {
+		getAppointmentsInternal().add(appointment);
+		appointment.setVet(this);
 	}
 
 }

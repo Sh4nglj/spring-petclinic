@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <title th:text="#{appointment.edit.title}">Edit Appointment</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link rel="stylesheet" type="text/css" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
+  <link rel="stylesheet" type="text/css" th:href="@{/resources/css/petclinic.css}" />
+  <link rel="stylesheet" type="text/css" th:href="@{/resources/css/datepicker.css}" />
+  <script type="text/javascript" th:src="@{/webjars/jquery/jquery.min.js}"></script>
+  <script type="text/javascript" th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+  <script type="text/javascript" th:src="@{/resources/js/datepicker.js}"></script>
+</head>
+
+<body>
+  <div class="container xd-container">
+    <h2 th:text="${appointment.id} != null ? #{appointment.edit.title} : #{appointment.new.title}">New Appointment</h2>
+    
+    <form th:object="${appointment}" th:action="@{${appointment.id} != null ? '/appointments/' + ${appointment.id} + '/edit' : '/appointments/new'}" method="post" class="form-horizontal">
+      <input type="hidden" th:field="*{id}" />
+      <input type="hidden" th:field="*{version}" />
+      
+      <!-- Owner and Pet information -->
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <p><strong th:text="#{appointment.owner}">Owner:</strong> <span th:text="${owner.firstName} + ' ' + ${owner.lastName}">John Doe</span></p>
+          <p><strong th:text="#{appointment.pet}">Pet:</strong> <span th:text="${pet.name}">Max</span></p>
+        </div>
+      </div>
+      
+      <!-- Vet selection -->
+      <div class="form-group" th:classappend="${#fields.hasErrors('vet')} ? 'has-error' : ''">
+        <label class="col-sm-2 control-label" th:text="#{appointment.vet}">Vet</label>
+        <div class="col-sm-10">
+          <select th:field="*{vet}" class="form-control">
+            <option value="" th:text="#{appointment.vet.select}">Select a vet</option>
+            <option th:each="vet : ${allVets}" 
+                    th:value="${vet.id}" 
+                    th:text="${vet.firstName} + ' ' + ${vet.lastName}" 
+                    th:selected="${vet.id == appointment.vet?.id}">James Carter</option>
+          </select>
+          <span class="help-block" th:if="${#fields.hasErrors('vet')}" th:errors="*{vet}"></span>
+        </div>
+      </div>
+      
+      <!-- Appointment date -->
+      <div class="form-group" th:classappend="${#fields.hasErrors('appointmentDate')} ? 'has-error' : ''">
+        <label class="col-sm-2 control-label" th:text="#{appointment.date}">Date</label>
+        <div class="col-sm-10">
+          <input type="date" th:field="*{appointmentDate}" 
+                 th:min="${LocalDate.now().toString()}" 
+                 class="form-control" 
+                 placeholder="YYYY-MM-DD" 
+                 th:value="${appointment.appointmentDate != null ? appointment.appointmentDate.toString() : defaultDate.toString()}" />
+          <span class="help-block" th:if="${#fields.hasErrors('appointmentDate')}" th:errors="*{appointmentDate}"></span>
+        </div>
+      </div>
+      
+      <!-- Time slot selection -->
+      <div class="form-group" th:classappend="${#fields.hasErrors('timeSlot')} ? 'has-error' : ''">
+        <label class="col-sm-2 control-label" th:text="#{appointment.time.slot}">Time Slot</label>
+        <div class="col-sm-10">
+          <select th:field="*{timeSlot}" class="form-control">
+            <option value="" th:text="#{appointment.time.slot.select}">Select a time slot</option>
+            <option th:each="slot : ${allTimeSlots}" 
+                    th:value="${slot}" 
+                    th:text="#{appointment.time.slot.${slot.name().toLowerCase()}}">9:00-10:00</option>
+          </select>
+          <span class="help-block" th:if="${#fields.hasErrors('timeSlot')}" th:errors="*{timeSlot}"></span>
+        </div>
+      </div>
+      
+      <!-- Status selection -->
+      <div class="form-group" th:classappend="${#fields.hasErrors('status')} ? 'has-error' : ''">
+        <label class="col-sm-2 control-label" th:text="#{appointment.status}">Status</label>
+        <div class="col-sm-10">
+          <select th:field="*{status}" class="form-control">
+            <option value="" th:text="#{appointment.status.select}">Select a status</option>
+            <option th:each="status : ${allStatuses}" 
+                    th:value="${status}" 
+                    th:text="#{appointment.status.${status.name().toLowerCase()}}">Pending</option>
+          </select>
+          <span class="help-block" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></span>
+        </div>
+      </div>
+      
+      <!-- Notes -->
+      <div class="form-group" th:classappend="${#fields.hasErrors('notes')} ? 'has-error' : ''">
+        <label class="col-sm-2 control-label" th:text="#{appointment.notes}">Notes</label>
+        <div class="col-sm-10">
+          <textarea th:field="*{notes}" rows="4" class="form-control" placeholder="Add any additional notes here..."></textarea>
+          <span class="help-block" th:if="${#fields.hasErrors('notes')}" th:errors="*{notes}"></span>
+        </div>
+      </div>
+      
+      <!-- Form actions -->
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary" th:text="${appointment.id} != null ? #{appointment.edit.save} : #{appointment.new.save}">Save Appointment</button>
+          <a th:href="@{/owners/{ownerId}(ownerId=${owner.id})}" class="btn btn-default" th:text="#{appointment.cancel}">Cancel</a>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <script type="text/javascript">
+    // 初始化日期选择器
+    $(function() {
+      $('input[type="date"]').datepicker({
+        format: 'yyyy-mm-dd',
+        startDate: '+0d',
+        autoclose: true,
+        todayHighlight: true
+      });
+    });
+  </script>
+</body>
+
+</html>

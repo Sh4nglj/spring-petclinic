@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'vets')}>
+
+<body>
+
+  <div class="row">
+    <div class="col-md-8">
+      <h2 th:text="#{vet.schedule} + ': ' + ${vet.firstName} + ' ' + ${vet.lastName}">Vet Schedule</h2>
+    </div>
+    <div class="col-md-4 text-right">
+      <a th:href="@{/vets.html}" class="btn btn-secondary mb-3" th:text="#{back.to.vets}">Back to Vets</a>
+    </div>
+  </div>
+  
+  <!-- 周切换导航 -->
+  <div class="mb-4">
+    <nav aria-label="Week navigation">
+      <ul class="pagination justify-content-between">
+        <li class="page-item">
+          <a class="page-link" th:href="@{/vets/{vetId}/schedule(vetId=${vet.id}, date=${previousWeekDate})}" th:text="#{previous.week}">Previous Week</a>
+        </li>
+        <li class="page-item active">
+          <span class="page-link" th:text="${weekStart} + ' - ' + ${weekEnd}"></span>
+        </li>
+        <li class="page-item">
+          <a class="page-link" th:href="@{/vets/{vetId}/schedule(vetId=${vet.id}, date=${nextWeekDate})}" th:text="#{next.week}">Next Week</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  
+  <!-- 预约统计卡片 -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h5 class="card-title" th:text="#{total.appointments}">Total Appointments</h5>
+          <p class="card-text display-4" th:text="${totalAppointments}">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title" th:text="#{completed.appointments}">Completed Appointments</h5>
+          <p class="card-text display-4" th:text="${completedAppointments}">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-danger text-white">
+        <div class="card-body">
+          <h5 class="card-title" th:text="#{canceled.appointments}">Canceled Appointments</h5>
+          <p class="card-text display-4" th:text="${canceledAppointments}">0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 周视图日历 -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th th:text="#{time.slot}">Time Slot</th>
+          <th th:each="day : ${#numbers.sequence(0, 6)}">
+            <div th:text="${weekStart.plusDays(day).dayOfWeek}"></div>
+            <div th:text="${weekStart.plusDays(day)}"></div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 循环显示每个时间段 -->
+        <tr th:each="timeSlot : ${T(org.springframework.samples.petclinic.vet.Appointment.TimeSlot).values()}">
+          <td th:text="${timeSlot}"></td>
+          <!-- 循环显示一周的每一天 -->
+          <td th:each="day : ${#numbers.sequence(0, 6)}">
+            <div th:with="currentDate = ${weekStart.plusDays(day)}">
+              <!-- 查找当天该时间段的预约 -->
+              <div th:each="appointment : ${appointments}" 
+                  th:if="${appointment.appointmentDate.equals(currentDate)} and ${appointment.timeSlot.equals(timeSlot)}">
+                <div class="card" th:classappend="'bg-' + ${appointment.status.style}">
+                  <div class="card-body p-2">
+                    <h6 class="card-title mb-1" th:text="${appointment.pet.name}"></h6>
+                    <p class="card-text mb-0" th:text="${appointment.pet.owner.firstName} + ' ' + ${appointment.pet.owner.lastName}"></p>
+                    <span class="badge badge-light" th:text="${appointment.status}"></span>
+                    <p th:if="${appointment.notes}" class="card-text small mt-1" th:text="${appointment.notes}"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- 导出iCalendar按钮 -->
+  <div class="mt-4 text-right">
+    <a th:href="@{/vets/{vetId}/schedule/export(vetId=${vet.id}, startDate=${weekStart}, endDate=${weekEnd})}" 
+       class="btn btn-primary" th:text="#{export.icalendar}">Export to iCalendar</a>
+  </div>
+
+</body>
+
+</html>

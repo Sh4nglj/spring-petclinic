@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <title th:text="#{appointments.list.title}">Appointments List</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link rel="stylesheet" type="text/css" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
+  <link rel="stylesheet" type="text/css" th:href="@{/resources/css/petclinic.css}" />
+</head>
+
+<body>
+  <div class="container xd-container">
+    <h2 th:text="#{appointments.list.title}">Appointments List</h2>
+    
+    <!-- Success message -->
+    <div th:if="${message}" class="alert alert-success" role="alert" th:text="${message}"></div>
+    
+    <!-- Error message -->
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+    
+    <!-- Filter form -->
+    <form th:action="@{/appointments}" method="get" class="form-inline mb-4">
+      <div class="form-group mr-3">
+        <label for="vetFilter" th:text="#{appointments.filter.vet}">Filter by Vet:</label>
+        <select id="vetFilter" name="vetId" class="form-control ml-2">
+          <option value="" th:text="#{appointments.filter.all}">All Vets</option>
+          <option th:each="vet : ${allVets}" 
+                  th:value="${vet.id}" 
+                  th:text="${vet.firstName} + ' ' + ${vet.lastName}" 
+                  th:selected="${selectedVet?.id == vet.id}">James Carter</option>
+        </select>
+      </div>
+      
+      <div class="form-group mr-3">
+        <label for="ownerFilter" th:text="#{appointments.filter.owner}">Filter by Owner:</label>
+        <select id="ownerFilter" name="ownerId" class="form-control ml-2">
+          <option value="" th:text="#{appointments.filter.all}">All Owners</option>
+          <option th:each="owner : ${allOwners}" 
+                  th:value="${owner.id}" 
+                  th:text="${owner.firstName} + ' ' + ${owner.lastName}" 
+                  th:selected="${selectedOwner?.id == owner.id}">John Doe</option>
+        </select>
+      </div>
+      
+      <button type="submit" class="btn btn-primary" th:text="#{appointments.filter.apply}">Apply Filter</button>
+      <a th:href="@{/appointments}" class="btn btn-default ml-2" th:text="#{appointments.filter.clear}">Clear Filter</a>
+    </form>
+    
+    <!-- Appointments table -->
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered table-hover">
+        <thead>
+          <tr>
+            <th th:text="#{appointments.table.vet}">Vet</th>
+            <th th:text="#{appointments.table.pet}">Pet</th>
+            <th th:text="#{appointments.table.owner}">Owner</th>
+            <th th:text="#{appointments.table.date}">Date</th>
+            <th th:text="#{appointments.table.time.slot}">Time Slot</th>
+            <th th:text="#{appointments.table.status}">Status</th>
+            <th th:text="#{appointments.table.notes}">Notes</th>
+            <th th:text="#{appointments.table.actions}">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="appointment : ${appointments}" 
+              th:classappend="${appointment.status == T(org.springframework.samples.petclinic.vet.Appointment.Status).COMPLETED ? 'success' : ''}">
+            <td th:text="${appointment.vet.firstName} + ' ' + ${appointment.vet.lastName}">James Carter</td>
+            <td th:text="${appointment.pet.name}">Max</td>
+            <td th:text="${appointment.pet.owner.firstName} + ' ' + ${appointment.pet.owner.lastName}">John Doe</td>
+            <td th:text="${#temporals.format(appointment.appointmentDate, 'yyyy-MM-dd')}">2023-10-15</td>
+            <td th:text="#{appointment.time.slot.${appointment.timeSlot.name().toLowerCase()}}">9:00-10:00</td>
+            <td>
+              <span th:class="'label label-' + ${appointment.status.style}" 
+                    th:text="#{appointment.status.${appointment.status.name().toLowerCase()}}">Pending</span>
+            </td>
+            <td th:text="${appointment.notes}">Regular checkup</td>
+            <td>
+              <a th:href="@{/appointments/{appointmentId}/edit(appointmentId=${appointment.id})}" 
+                 class="btn btn-sm btn-primary" 
+                 th:text="#{appointments.table.edit}">Edit</a>
+              <a th:href="@{/appointments/{appointmentId}/delete(appointmentId=${appointment.id})}" 
+                 class="btn btn-sm btn-danger ml-2" 
+                 th:text="#{appointments.table.delete}" 
+                 onclick="return confirm('Are you sure you want to delete this appointment?');">Delete</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- No appointments message -->
+    <div th:if="${appointments.empty}" class="alert alert-info" role="alert" th:text="#{appointments.list.empty}">No appointments found.</div>
+  </div>
+</body>
+
+</html>
