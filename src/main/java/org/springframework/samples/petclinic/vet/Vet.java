@@ -29,6 +29,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.xml.bind.annotation.XmlElement;
 import org.jspecify.annotations.Nullable;
@@ -49,6 +50,9 @@ public class Vet extends Person {
 	@JoinTable(name = "vet_specialties", joinColumns = @JoinColumn(name = "vet_id"),
 			inverseJoinColumns = @JoinColumn(name = "specialty_id"))
 	private @Nullable Set<Specialty> specialties;
+	
+	@OneToMany(mappedBy = "vet", fetch = FetchType.LAZY)
+	private @Nullable Set<Appointment> appointments;
 
 	protected Set<Specialty> getSpecialtiesInternal() {
 		if (this.specialties == null) {
@@ -70,6 +74,25 @@ public class Vet extends Person {
 
 	public void addSpecialty(Specialty specialty) {
 		getSpecialtiesInternal().add(specialty);
+	}
+	
+	protected Set<Appointment> getAppointmentsInternal() {
+		if (this.appointments == null) {
+			this.appointments = new HashSet<>();
+		}
+		return this.appointments;
+	}
+	
+	public List<Appointment> getAppointments() {
+		return getAppointmentsInternal().stream()
+			.sorted(Comparator.comparing(Appointment::getAppointmentDate)
+				.thenComparing(Appointment::getTimeSlot))
+			.collect(Collectors.toList());
+	}
+	
+	public void addAppointment(Appointment appointment) {
+		getAppointmentsInternal().add(appointment);
+		appointment.setVet(this);
 	}
 
 }

@@ -71,6 +71,26 @@
           <tr>
             <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a></td>
             <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a></td>
+            <td><a th:href="@{/appointments/new?petId=__${pet.id}__}" th:text="#{scheduleAppointment}">Schedule Appointment</a></td>
+          </tr>
+        </table>
+      </td>
+      <td valign="top">
+        <h4 th:text="#{appointments}">Appointments</h4>
+        <table class="table-condensed">
+          <thead>
+            <tr>
+              <th th:text="#{appointmentDate}">Appointment Date</th>
+              <th th:text="#{timeSlot}">Time Slot</th>
+              <th th:text="#{vet}">Vet</th>
+              <th th:text="#{status}">Status</th>
+            </tr>
+          </thead>
+          <tr th:each="appointment : ${pet.appointments}">
+            <td th:text="${#temporals.format(appointment.appointmentDate, 'yyyy-MM-dd')}"></td>
+            <td th:text="${appointment.timeSlot.getDisplayName()}"></td>
+            <td th:text="${appointment.vet.firstName + ' ' + appointment.vet.lastName}"></td>
+            <td th:text="${appointment.status.getDisplayName()}"></td>
           </tr>
         </table>
       </td>
