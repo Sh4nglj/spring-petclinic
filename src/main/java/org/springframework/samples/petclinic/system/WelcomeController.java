@@ -16,15 +16,48 @@
 
 package org.springframework.samples.petclinic.system;
 
+import org.springframework.samples.petclinic.owner.OwnerRepository;
+import org.springframework.samples.petclinic.vet.VetRepository;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 class WelcomeController {
 
+	private final StatsService statsService;
+
+	public WelcomeController(StatsService statsService) {
+		this.statsService = statsService;
+	}
+
 	@GetMapping("/")
-	public String welcome() {
+	public String welcome(Model model) {
+		// Add statistics to model
+		model.addAttribute("stats", statsService.getAllStats());
+
+		// Add welcome message based on time
+		String welcomeMessage = getWelcomeMessage();
+		model.addAttribute("welcomeMessage", welcomeMessage);
+
 		return "welcome";
+	}
+
+	/**
+	 * Get welcome message based on current time.
+	 * @return welcome message
+	 */
+	private String getWelcomeMessage() {
+		int hour = java.time.LocalTime.now().getHour();
+		if (hour < 12) {
+			return "上午好";
+		}
+		else if (hour < 18) {
+			return "下午好";
+		}
+		else {
+			return "晚上好";
+		}
 	}
 
 }

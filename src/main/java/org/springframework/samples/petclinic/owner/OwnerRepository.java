@@ -15,12 +15,16 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.annotation.Nonnull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repository class for <code>Owner</code> domain objects. All method names are compliant
@@ -35,6 +39,54 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author Wick Dynex
  */
 public interface OwnerRepository extends JpaRepository<Owner, Integer> {
+
+	/**
+	 * Count the total number of owners.
+	 * @return the total number of owners
+	 */
+	long count();
+
+	/**
+	 * Count the total number of pets.
+	 * @return the total number of pets
+	 */
+	@Query("SELECT COUNT(p) FROM Pet p")
+	long countPets();
+
+	/**
+	 * Count the number of visits today.
+	 * @return the number of visits today
+	 */
+	@Query("SELECT COUNT(v) FROM Visit v WHERE v.date = CURRENT_DATE")
+	long countVisitsToday();
+
+	/**
+	 * Count the number of visits this month.
+	 * @return the number of visits this month
+	 */
+	@Query("SELECT COUNT(v) FROM Visit v WHERE YEAR(v.date) = YEAR(CURRENT_DATE) AND MONTH(v.date) = MONTH(CURRENT_DATE)")
+	long countVisitsThisMonth();
+
+	/**
+	 * Get visit counts for the last 7 days.
+	 * @return a list of arrays with date and count
+	 */
+	@Query("SELECT v.date, COUNT(v) FROM Visit v WHERE v.date BETWEEN :startDate AND CURRENT_DATE GROUP BY v.date ORDER BY v.date")
+	List<Object[]> getVisitCountsLast7Days(@Param("startDate") LocalDate startDate);
+
+	/**
+	 * Get pet type distribution.
+	 * @return a list of arrays with pet type name and count
+	 */
+	@Query("SELECT pt.name, COUNT(p) FROM Pet p JOIN p.type pt GROUP BY pt.name")
+	List<Object[]> getPetTypeDistribution();
+
+	/**
+	 * Get recent visits.
+	 * @return a list of recent visits with pet, owner, and vet information
+	 */
+	@Query("SELECT v FROM Visit v JOIN FETCH v.pet p JOIN FETCH p.owner o ORDER BY v.date DESC")
+	List<Visit> findRecentVisits(Pageable pageable);
 
 	/**
 	 * Retrieve {@link Owner}s from the data store by last name, returning all owners

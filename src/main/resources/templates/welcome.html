@@ -3,14 +3,238 @@
 <html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'home')}">
 
 <body>
-
-  <h2 th:text="#{welcome}">Welcome</h2>
-  <div class="row">
-    <div class="col-md-12">
-      <img class="img-responsive" src="../static/resources/images/pets.png" th:src="@{/resources/images/pets.png}" />
+    <!-- Welcome Banner -->
+    <div class="jumbotron jumbotron-fluid mb-4">
+        <div class="container">
+            <h1 class="display-4" th:text="${welcomeMessage}">欢迎</h1>
+            <p class="lead">欢迎来到Spring PetClinic管理系统</p>
+        </div>
     </div>
-  </div>
 
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">新增宠物主人</h5>
+                    <p class="card-text">快速添加新的宠物主人信息</p>
+                    <a href="/owners/new" class="btn btn-light">立即添加</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">添加宠物</h5>
+                    <p class="card-text">为现有主人添加新宠物</p>
+                    <a href="/owners/find" class="btn btn-light">立即添加</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">预约就诊</h5>
+                    <p class="card-text">为宠物预约兽医就诊</p>
+                    <a href="/owners/find" class="btn btn-light">立即预约</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">宠物总数</h6>
+                            <h4 class="card-title" th:text="${stats.totalPets}">0</h4>
+                        </div>
+                        <div class="bg-primary rounded-circle p-3">
+                            <i class="fas fa-paw fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <p class="card-text mt-3">系统中注册的宠物总数</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">宠物主人总数</h6>
+                            <h4 class="card-title" th:text="${stats.totalOwners}">0</h4>
+                        </div>
+                        <div class="bg-success rounded-circle p-3">
+                            <i class="fas fa-users fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <p class="card-text mt-3">系统中注册的宠物主人总数</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">兽医总数</h6>
+                            <h4 class="card-title" th:text="${stats.totalVets}">0</h4>
+                        </div>
+                        <div class="bg-info rounded-circle p-3">
+                            <i class="fas fa-user-md fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <p class="card-text mt-3">系统中注册的兽医总数</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">今日预约数</h6>
+                            <h4 class="card-title" th:text="${stats.todayVisits}">0</h4>
+                        </div>
+                        <div class="bg-warning rounded-circle p-3">
+                            <i class="fas fa-calendar-check fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <p class="card-text mt-3">今日的就诊预约数量</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">近7天就诊趋势</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="visitTrendChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">宠物类型分布</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="petTypeChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Visits -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">最近就诊记录</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>宠物名称</th>
+                                    <th>主人姓名</th>
+                                    <th>就诊日期</th>
+                                    <th>兽医姓名</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="visit : ${stats.recentVisits}">
+                                    <td th:text="${visit.pet.name}"></td>
+                                    <td th:text="${visit.pet.owner.firstName} + ' ' + ${visit.pet.owner.lastName}"></td>
+                                    <td th:text="${#temporals.format(visit.date, 'yyyy-MM-dd')}"></td>
+                                    <td th:text="${visit.vet.firstName} + ' ' + ${visit.vet.lastName}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script th:inline="javascript">
+        // Visit Trend Chart
+        const visitTrendData = /*[[${stats.visitTrend}]]*/ [];
+        const visitTrendLabels = visitTrendData.map(item => item.date);
+        const visitTrendCounts = visitTrendData.map(item => item.count);
+
+        const visitTrendChart = new Chart(
+            document.getElementById('visitTrendChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: visitTrendLabels,
+                    datasets: [{
+                        label: '就诊数量',
+                        data: visitTrendCounts,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            }
+        );
+
+        // Pet Type Distribution Chart
+        const petTypeData = /*[[${stats.petTypeDistribution}]]*/ [];
+        const petTypeLabels = petTypeData.map(item => item.name);
+        const petTypeValues = petTypeData.map(item => item.value);
+
+        const petTypeChart = new Chart(
+            document.getElementById('petTypeChart'),
+            {
+                type: 'pie',
+                data: {
+                    labels: petTypeLabels,
+                    datasets: [{
+                        label: '宠物类型',
+                        data: petTypeValues,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            }
+        );
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            location.reload();
+        }, 300000); // 5 minutes in milliseconds
+    </script>
 </body>
 
 </html>

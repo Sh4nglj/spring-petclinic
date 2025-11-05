@@ -38,6 +38,13 @@ import java.util.Collection;
 public interface VetRepository extends Repository<Vet, Integer> {
 
 	/**
+	 * Count the total number of vets.
+	 * @return the total number of vets
+	 */
+	@Transactional(readOnly = true)
+	long count();
+
+	/**
 	 * Retrieve all <code>Vet</code>s from the data store.
 	 * @return a <code>Collection</code> of <code>Vet</code>s
 	 */
